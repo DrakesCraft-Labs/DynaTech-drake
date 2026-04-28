@@ -1,73 +1,50 @@
 # DynaTech-drake
 
-## Resumen Drake
-Addon de Slimefun orientado a maquinaria avanzada, materiales y recetas tecnicas.
+[![Rama](https://img.shields.io/badge/branch-1.21--latin-2ea44f)](https://github.com/DrakesCraft-Labs/DynaTech-drake/tree/1.21-latin)
+[![Licencia](https://img.shields.io/github/license/DrakesCraft-Labs/DynaTech-drake)](https://github.com/DrakesCraft-Labs/DynaTech-drake/blob/1.21-latin/LICENSE)
+[![Ultimo commit](https://img.shields.io/github/last-commit/DrakesCraft-Labs/DynaTech-drake/1.21-latin)](https://github.com/DrakesCraft-Labs/DynaTech-drake/commits/1.21-latin)
 
-## Que anade a Slimefun
-- Extiende contenido de Slimefun con mecanicas y bloques propios del addon.
-- Incluye ajustes de compatibilidad para stack Drake 1.21.
+## Descripción técnica
+Addon de Slimefun enfocado en maquinaria avanzada, materiales especiales y cadenas de crafting técnico.
 
-## Estado
-- Extraido desde drakes-slimefun-labs (rama 1.21-latin).
-- Objetivo: desarrollo aislado por addon y releases independientes.
+## Qué añade a Slimefun
+- Amplía el árbol tecnológico de Slimefun con nuevos tiers de maquinaria.
+- Desbloquea rutas de producción más eficientes.
+- Integra contenido técnico adicional para servidores de progresión.
 
----
+## Características principales
+- Nuevos materiales y componentes para producción industrial.
+- Máquinas y recipe types avanzados.
+- Port alineado a namespaces/dependencias Drake.
 
-# ⚙️ DynaTech
+## Matriz de compatibilidad
+| Componente | Estado |
+|---|---|
+| Minecraft | 1.21.x |
+| Paper/Purpur | 1.21.x |
+| Slimefun Core Drake | 11.x (línea `1.21-latin`) |
+| Java | 21 |
 
-## 🏭 El Futuro de la Industria Automatizada
-**DynaTech** es la pieza central de la automatización en el ecosistema **Drake Slimefun**. Diseñado para maximizar la eficiencia mediante maquinaria dinámica, transporte inalámbrico y herramientas de alto rendimiento.
+## Instalación
+1. Descarga el `.jar` de Releases del repositorio.
+2. Copia el archivo en la carpeta `plugins/` del servidor.
+3. Asegura dependencias (`Slimefun`, `ProtocolLib` u otras según addon).
+4. Reinicia el servidor y revisa `logs/latest.log` para validar carga.
 
-> [!IMPORTANT]
-> **Actualizado para 1.21.1 / Java 21**: Esta versión ha sido optimizada para el Drake Framework, garantizando estabilidad en configuraciones masivas de maquinaria.
+## Build local
+```bash
+mvn -DskipTests clean package
+```
 
----
+Artefacto esperado:
+- `target/DynaTech-drake-*.jar`
 
-## 🚀 Maquinaria de Vanguardia
+## Flujo de release
+1. Crear branch de cambios (`feature/*` o `fix/*`).
+2. Abrir PR hacia `1.21-latin` con plan de pruebas.
+3. Al mergear, crear tag/release y publicar jar compilado.
 
-### ⚡ Energía e Industria
-- **Auto-Kitchen**: Automatización total de recetas de cocina (Soporta ExoticGarden).
-- **Growth Chambers**: Cultivo hidropónico acelerado para todo tipo de saplings y plantas.
-- **Wireless Energy**: Transporte de energía sin cables mediante Bancos y Puntos de enlace.
-- **Tesseract**: Transporte dimensional unificado de ítems y energía.
+Versionar cambios de recipes/items y registrar compatibilidad con Slimefun core del mismo corte.
 
-### 🍃 Generación Sostenible
-- **Stardust Reactor**: El pináculo de la generación de energía mediante Polvo de Estrellas.
-- **Hydro Generator**: Energía limpia aprovechando el flujo hídrico.
-- **Dragon Egg Generator**: Energía geotérmica masiva capturando el calor de huevos de dragón.
-
----
-
-## 💎 Herramientas y Utilidades Premium
-
-| Tool | Función |
-| :--- | :--- |
-| **👼 Angel Gem** | Vuelo creativo permanente con ajustes de velocidad dinámicos. |
-| **🏠 Dimensional Home** | Tu propio oasis privado en una dimensión de bolsillo. |
-| **🛡️ Healthy Band** | Aumento instantáneo de Vitalidad (+4 Corazones). |
-| **⚡ Stimulator** | Conversión directa de Energía en Nutrición para el jugador. |
-
----
-
-## 🛠️ Detalles del Drake Port
-- **Build Engine**: Maven Reactor v6.
-- **Core**: Totalmente alineado con `Dough-Core` y `Slimefun-Drake`.
-- **Integraciones**: Soporte nativo para **InfinityExpansion** y **ExoticGarden**.
-
----
-
-## 🚀 Instalación
-Integrado por defecto en la suite **DrakesVanillaSlimefun+**. 
-*Simplemente explora las categorías industriales en tu Guía de Slimefun.*
-
----
-
-[⬅️ Volver a la Suite Principal](../../README.md)
-
-<!-- DRAKES-STATUS:BEGIN -->
-> Estado de sincronizacion: **2026-04-24**.
-> Baseline tecnico vigente: **Paper 1.21.1 + Java 21**.
-> CI principal en `1.21-latin`: **Gates 1-5 en verde**.
-> Nota: el monorepo completo sigue en migracion incremental por lotes.
-<!-- DRAKES-STATUS:END -->
-
+## Relación con el monorepo
+Este repositorio se mantiene en paralelo con `drakes-slimefun-labs` para desarrollo aislado por addon y despliegues independientes.
