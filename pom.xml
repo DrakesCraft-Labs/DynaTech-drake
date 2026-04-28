@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.drakescraft_labs</groupId>
+        <artifactId>drakes-slimefun-labs</artifactId>
+        <version>11-SNAPSHOT</version>
+        <relativePath>../../../pom.xml</relativePath>
+    </parent>
+
+    <properties>
+        <maven.deploy.skip>false</maven.deploy.skip>
+    </properties>
+
+    <groupId>com.github.drakescraft_labs</groupId>
+    <artifactId>DynaTech-drake</artifactId>
+    <version>1.21-Drake-v7</version>
+    <name>DynaTech</name>
+    <description>Advanced technical machinery for Slimefun 4. Featuring high-tier generators, automated farms, and unique utilities for the ultimate factory experience.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>drakes-labs-autoupdate</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>slimefun-core</artifactId>
+            <version>${slimefun.drake.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>dough-core</artifactId>
+            <version>${dough.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Soft Dependencies (Batch 1 Partners) -->
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>ExtraUtils-drake</artifactId>
+            <version>1.20.6-Drake-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>ExoticGarden-drake</artifactId>
+            <version>${slimefun.drake.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>InfinityExpansion-drake</artifactId>
+            <version>1.20.6-Drake-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.drakescraft_labs</groupId>
+            <artifactId>Gastronomicon-drake</artifactId>
+            <version>1.1.3</version>
+            <scope>provided</scope>
+        </dependency>
+    
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.name} v${project.version}</finalName>
+        <defaultGoal>clean package</defaultGoal>
+        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>*</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>com.github.drakescraft_labs.dynatech.bstats</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
