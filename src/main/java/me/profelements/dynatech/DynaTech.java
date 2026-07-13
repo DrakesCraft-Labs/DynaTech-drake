@@ -1,6 +1,5 @@
 package me.profelements.dynatech;
 
-import com.github.drakescraft_labs.labupdate.DrakesLabsReleaseUpdate;
 import com.github.drakescraft_labs.slimefun4.api.SlimefunAddon;
 import com.github.drakescraft_labs.slimefun4.implementation.Slimefun;
 import me.profelements.dynatech.items.backpacks.PicnicBasket;
@@ -26,7 +25,6 @@ import me.profelements.dynatech.utils.Liquid;
 import me.profelements.dynatech.utils.LiquidRegistry;
 import me.profelements.dynatech.utils.RecipeRegistry;
 
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -49,7 +47,6 @@ public class DynaTech extends JavaPlugin implements SlimefunAddon {
 
     @Override
     public void onEnable() {
-        DrakesLabsReleaseUpdate.schedule(this, "DynaTech-drake");
         setInstance(this);
         rRegistry = RecipeRegistry.init();
         lRegistry = LiquidRegistry.init();
@@ -59,8 +56,6 @@ public class DynaTech extends JavaPlugin implements SlimefunAddon {
         final int TICK_TIME = Slimefun.getTickerTask().getTickRate();
 
         saveDefaultConfig();
-
-        new Metrics(this, 9689);
 
         if (!getConfig().getBoolean("options.disable-dimensionalhome-world")) {
             WorldCreator worldCreator = new WorldCreator("dimensionalhome");
