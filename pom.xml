@@ -112,12 +112,6 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.2</version>
                 <configuration>
-                    <relocations>
-                        <relocation>
-                            <pattern>org.bstats</pattern>
-                            <shadedPattern>com.github.drakescraft_labs.dynatech.bstats</shadedPattern>
-                        </relocation>
-                    </relocations>
                 </configuration>
                 <executions>
                     <execution>
