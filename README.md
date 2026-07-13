@@ -4,8 +4,8 @@
 [![Licencia](https://img.shields.io/github/license/DrakesCraft-Labs/DynaTech-drake)](https://github.com/DrakesCraft-Labs/DynaTech-drake/blob/1.21-latin/LICENSE)
 [![Ultimo commit](https://img.shields.io/github/last-commit/DrakesCraft-Labs/DynaTech-drake/1.21-latin)](https://github.com/DrakesCraft-Labs/DynaTech-drake/commits/1.21-latin)
 
-## Descripción técnica
-Addon de Slimefun enfocado en maquinaria avanzada, materiales especiales y cadenas de crafting técnico.
+DynaTech Drake es un addon de Slimefun Drake enfocado en maquinaria avanzada,
+materiales especiales y cadenas de crafting técnico.
 
 ## Qué añade a Slimefun
 - Amplía el árbol tecnológico de Slimefun con nuevos tiers de maquinaria.
@@ -20,20 +20,20 @@ Addon de Slimefun enfocado en maquinaria avanzada, materiales especiales y caden
 ## Matriz de compatibilidad
 | Componente | Estado |
 |---|---|
-| Minecraft | 1.21.x |
-| Paper/Purpur | 1.21.x |
-| Slimefun Core Drake | 11.x (línea `1.21-latin`) |
+| Minecraft / Paper / Purpur | **1.21.11** |
+| Slimefun Core Drake | **11** (línea `1.21-latin`) |
 | Java | 21 |
 
 ## Instalación
-1. Descarga el `.jar` de Releases del repositorio.
-2. Copia el archivo en la carpeta `plugins/` del servidor.
-3. Asegura dependencias (`Slimefun`, `ProtocolLib` u otras según addon).
-4. Reinicia el servidor y revisa `logs/latest.log` para validar carga.
+1. Compila o descarga el JAR de la rama `1.21-latin`.
+2. Respalda el JAR y `plugins/DynaTech/` antes de sustituirlo.
+3. Instala un único JAR en una ventana de reinicio controlada.
+4. Valida en staging una máquina colocada, una receta y su inventario antes de
+   continuar con producción.
 
 ## Build local
 ```bash
-mvn -DskipTests clean package
+mvn -B -ntp clean verify
 ```
 
 Artefacto esperado:
@@ -44,7 +44,11 @@ Artefacto esperado:
 2. Abrir PR hacia `1.21-latin` con plan de pruebas.
 3. Al mergear, crear tag/release y publicar jar compilado.
 
-Versionar cambios de recipes/items y registrar compatibilidad con Slimefun core del mismo corte.
+Versionar cambios de recetas/ítems y registrar compatibilidad con el core del
+mismo corte. El fork no usa autoactualizadores ni escribe artefactos en
+ejecución.
 
 ## Relación con el monorepo
-Este repositorio se mantiene en paralelo con `drakes-slimefun-labs` para desarrollo aislado por addon y despliegues independientes.
+Este repositorio es la fuente de desarrollo aislado por addon y despliegues
+independientes. Mantiene IDs, recetas y datos de bloque existentes para que una
+actualización no invalide progreso de jugadores.

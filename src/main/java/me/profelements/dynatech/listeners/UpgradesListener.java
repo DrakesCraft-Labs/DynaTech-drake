@@ -1,7 +1,9 @@
 package me.profelements.dynatech.listeners;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -63,39 +65,89 @@ public class UpgradesListener implements Listener {
             // Grab menu and then grab output slots
             if (e.getProcessor().getOwner() instanceof AContainer cont
                     && e.getOperation() instanceof CraftingOperation op && op.isFinished()) {
-                BlockMenu menu = BlockStorage.getInventory(l);
-                int[] outputSlots = cont.getOutputSlots();
                 ItemStack[] outputItems = op.getResults();
-                List<Boolean> outed = new ArrayList<>(outputItems.length);
-                // Clear `outputItems` from `outputSlots`
-                if (l.getBlock().getRelative(face).getType().equals(Material.CHEST)) {
-                    for (int i = 0; i < outputSlots.length; i++) {
-                        ItemStack item = menu.getItemInSlot(outputSlots[i]);
-                        for (ItemStack outputItem : outputItems) {
-                            if (SlimefunUtils.isItemSimilar(item, outputItem, true) && outed.size() < (i + 1)) {
-                                int amount = item.getAmount();
-                                int outAmount = outputItem.getAmount();
-                                if (amount >= outAmount) {
-                                    menu.consumeItem(outputSlots[i], outAmount);
-                                    outed.add(true);
-                                }
-                            }
-                        }
-                    }
-
-                    DynaTech.runSync(() -> {
-                        BlockState state = l.getBlock().getRelative(face).getState();
-                        if (state instanceof Chest chest
-                                && InvUtils.fitAll(chest.getBlockInventory(), outputItems)) {
-                            Inventory inv = chest.getBlockInventory();
-
-                            inv.addItem(outputItems);
-                            chest.update(true, false);
-                        }
-                    });
+                if (face != BlockFace.SELF && l.getBlock().getRelative(face).getType() == Material.CHEST) {
+                    // This event can be asynchronous. Reserve and transfer the exact results on
+                    // the server thread so an output is never consumed before its destination fits.
+                    DynaTech.runSync(() -> transferCompletedOutput(l, face, cont, outputItems));
                 }
             }
         }
+    }
+
+    private static void transferCompletedOutput(Location location, BlockFace face, AContainer container,
+            ItemStack[] operationResults) {
+        BlockState state = location.getBlock().getRelative(face).getState();
+        if (!(state instanceof Chest chest) || operationResults == null) {
+            return;
+        }
+
+        BlockMenu menu = BlockStorage.getInventory(location);
+        if (menu == null) {
+            return;
+        }
+
+        List<ItemStack> results = new ArrayList<>();
+        for (ItemStack result : operationResults) {
+            if (result != null && !result.getType().isAir() && result.getAmount() > 0) {
+                results.add(result.clone());
+            }
+        }
+        if (results.isEmpty() || !InvUtils.fitAll(chest.getBlockInventory(), results.toArray(ItemStack[]::new))) {
+            return;
+        }
+
+        Map<Integer, Integer> consumptions = reserveOutputSlots(menu, container.getOutputSlots(), results);
+        if (consumptions == null) {
+            return;
+        }
+
+        consumptions.forEach(menu::consumeItem);
+        Map<Integer, ItemStack> leftovers = chest.getBlockInventory().addItem(results.toArray(ItemStack[]::new));
+        if (!leftovers.isEmpty()) {
+            // fitAll and addItem run in the same server task, so this path indicates another
+            // plugin mutated the chest during the call. Keep the remainder visible instead of
+            // silently deleting it; the operation is logged for an administrator to inspect.
+            leftovers.values().forEach(item -> chest.getWorld().dropItemNaturally(chest.getLocation(), item));
+            DynaTech.getInstance().getLogger().severe("Auto-output detectó una mutación externa del cofre; se soltó el remanente para evitar pérdida silenciosa.");
+            return;
+        }
+        chest.update(true, false);
+    }
+
+    private static Map<Integer, Integer> reserveOutputSlots(BlockMenu menu, int[] outputSlots, List<ItemStack> results) {
+        Map<Integer, Integer> available = new HashMap<>();
+        Map<Integer, Integer> consumptions = new HashMap<>();
+
+        for (int slot : outputSlots) {
+            ItemStack stack = menu.getItemInSlot(slot);
+            if (stack != null && !stack.getType().isAir()) {
+                available.put(slot, stack.getAmount());
+            }
+        }
+
+        for (ItemStack result : results) {
+            int remaining = result.getAmount();
+            for (int slot : outputSlots) {
+                ItemStack stack = menu.getItemInSlot(slot);
+                int amount = available.getOrDefault(slot, 0);
+                if (amount == 0 || !SlimefunUtils.isItemSimilar(stack, result, true)) {
+                    continue;
+                }
+
+                int consumed = Math.min(amount, remaining);
+                available.put(slot, amount - consumed);
+                consumptions.merge(slot, consumed, Integer::sum);
+                remaining -= consumed;
+                if (remaining == 0) {
+                    break;
+                }
+            }
+            if (remaining != 0) {
+                return null;
+            }
+        }
+        return consumptions;
     }
 
     @EventHandler

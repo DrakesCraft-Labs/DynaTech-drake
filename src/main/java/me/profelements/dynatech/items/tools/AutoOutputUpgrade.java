@@ -25,28 +25,29 @@ public class AutoOutputUpgrade extends SlimefunItem {
     public ItemUseHandler onUse() {
         return e -> {
             Optional<Block> optBlock = e.getClickedBlock();
-            if (optBlock.isPresent()) {
-                Block block = optBlock.get();
-
-                String upgrades = BlockStorage.getLocationInfo(block.getLocation(), "upgrades");
-
-                if (upgrades != null && upgrades.contains("id:auto_output")) {
-                    return;
-                }
-
-                String blockFaceString = blockFaceToString(e.getClickedFace());
-                if (blockFaceString == "invalid") {
-                    return;
-                }
-                if (upgrades != null) {
-                    BlockStorage.addBlockInfo(block, "upgrades",
-                            upgrades + "," + "{id:auto_output,face:" + blockFaceString + "}");
-                } else {
-
-                    BlockStorage.addBlockInfo(block, "upgrades", "{id:auto_output,face:" + blockFaceString + "}");
-                }
+            if (optBlock.isEmpty()) {
+                return;
             }
 
+            Block block = optBlock.get();
+            String upgrades = BlockStorage.getLocationInfo(block.getLocation(), "upgrades");
+
+            if (upgrades != null && upgrades.contains("id:auto_output")) {
+                return;
+            }
+
+            String blockFaceString = blockFaceToString(e.getClickedFace());
+            if ("invalid".equals(blockFaceString)) {
+                return;
+            }
+            if (upgrades != null) {
+                BlockStorage.addBlockInfo(block, "upgrades",
+                        upgrades + "," + "{id:auto_output,face:" + blockFaceString + "}");
+            } else {
+                BlockStorage.addBlockInfo(block, "upgrades", "{id:auto_output,face:" + blockFaceString + "}");
+            }
+
+            // Consume only after the upgrade has actually been recorded on the machine.
             ItemStack stack = e.getItem();
             int amount = stack.getAmount();
 
@@ -90,7 +91,6 @@ public class AutoOutputUpgrade extends SlimefunItem {
 
     public static BlockFace stringToBlockFace(String blockFaceString) {
         BlockFace face;
-        DynaTech.getInstance().getLogger().info(blockFaceString);
         switch (blockFaceString) {
             case "face:up":
                 face = BlockFace.UP;

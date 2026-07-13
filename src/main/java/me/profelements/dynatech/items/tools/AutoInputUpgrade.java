@@ -22,28 +22,29 @@ public class AutoInputUpgrade extends SlimefunItem {
     public ItemUseHandler onUse() {
         return e -> {
             Optional<Block> optBlock = e.getClickedBlock();
-            if (optBlock.isPresent()) {
-                Block block = optBlock.get();
-
-                String upgrades = BlockStorage.getLocationInfo(block.getLocation(), "upgrades");
-
-                if (upgrades != null && upgrades.contains("id:auto_input")) {
-                    return;
-                }
-
-                String blockFaceString = AutoOutputUpgrade.blockFaceToString(e.getClickedFace());
-                if (blockFaceString == "invalid") {
-                    return;
-                }
-                if (upgrades != null) {
-                    BlockStorage.addBlockInfo(block, "upgrades",
-                            upgrades + "," + "{id:auto_input,face:" + blockFaceString + "}");
-                } else {
-
-                    BlockStorage.addBlockInfo(block, "upgrades", "{id:auto_input,face:" + blockFaceString + "}");
-                }
+            if (optBlock.isEmpty()) {
+                return;
             }
 
+            Block block = optBlock.get();
+            String upgrades = BlockStorage.getLocationInfo(block.getLocation(), "upgrades");
+
+            if (upgrades != null && upgrades.contains("id:auto_input")) {
+                return;
+            }
+
+            String blockFaceString = AutoOutputUpgrade.blockFaceToString(e.getClickedFace());
+            if ("invalid".equals(blockFaceString)) {
+                return;
+            }
+            if (upgrades != null) {
+                BlockStorage.addBlockInfo(block, "upgrades",
+                        upgrades + "," + "{id:auto_input,face:" + blockFaceString + "}");
+            } else {
+                BlockStorage.addBlockInfo(block, "upgrades", "{id:auto_input,face:" + blockFaceString + "}");
+            }
+
+            // Do not consume the upgrade for air clicks, invalid faces or duplicates.
             ItemStack stack = e.getItem();
             int amount = stack.getAmount();
 
