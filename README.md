@@ -38,7 +38,7 @@
 
 ### 4. 📦 Almacenamiento Cuántico & Carga Inalámbrica
 - **Almacenador Cuántico (Quantum Storage)**: Almacena millones de unidades de un solo tipo de ítem en un único bloque.
-- **Cargador Inalámbrico (Wireless Charger)**: Recarga automáticamente la armadura y herramientas eléctricas de los players cercanos.
+- **Cargador Inalámbrico (Wireless Charger)**: Recarga automáticamente la armadura y herramientas eléctricas de los jugadores cercanos.
 
 ---
 
@@ -57,7 +57,7 @@
 mvn clean package
 ```
 
-Ubica el archivo compilado `DynaTech-drake-v1.5.0.jar` en la folder `plugins/` de tu servidor Minecraft Paper/Purpur 1.21.11.
+Ubica el archivo compilado `DynaTech-drake-v1.5.0.jar` en la carpeta `plugins/` de tu servidor Minecraft Paper/Purpur 1.21.11.
 
 ---
 
