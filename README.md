@@ -1,54 +1,38 @@
-# DynaTech-drake
+<div align="center">
 
-[![Rama](https://img.shields.io/badge/branch-1.21--latin-2ea44f)](https://github.com/DrakesCraft-Labs/DynaTech-drake/tree/1.21-latin)
-[![Licencia](https://img.shields.io/github/license/DrakesCraft-Labs/DynaTech-drake)](https://github.com/DrakesCraft-Labs/DynaTech-drake/blob/1.21-latin/LICENSE)
-[![Ultimo commit](https://img.shields.io/github/last-commit/DrakesCraft-Labs/DynaTech-drake/1.21-latin)](https://github.com/DrakesCraft-Labs/DynaTech-drake/commits/1.21-latin)
+<img src="https://raw.githubusercontent.com/DrakesCraft-Labs/DynaTech-drake/main/dynatech_banner.svg" alt="DynaTech-Drake Banner" width="920" />
 
-DynaTech Drake es un addon de Slimefun Drake enfocado en maquinaria avanzada,
-materiales especiales y cadenas de crafting técnico.
+# ⚡ DynaTech-Drake
 
-## Qué añade a Slimefun
-- Amplía el árbol tecnológico de Slimefun con nuevos tiers de maquinaria.
-- Desbloquea rutas de producción más eficientes.
-- Integra contenido técnico adicional para servidores de progresión.
+**Automatización de Hidroponía, Lavadores de Minerales y Almacenamiento Cuántico con Aceleración Nativa en Rust**
 
-## Características principales
-- Nuevos materiales y componentes para producción industrial.
-- Máquinas y recipe types avanzados.
-- Port alineado a namespaces/dependencias Drake.
+<p>
+  <a href="https://github.com/DrakesCraft-Labs/DynaTech-drake"><img src="https://img.shields.io/badge/GitHub-DynaTech--Drake-181717?style=for-the-badge&logo=github" alt="GitHub"/></a>
+  <img src="https://img.shields.io/badge/Java-21_FFM_Panama-F89820?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21 FFM"/>
+  <img src="https://img.shields.io/badge/Rust-FFM_Accelerated-FF4500?style=for-the-badge&logo=rust&logoColor=white" alt="Rust Native"/>
+  <img src="https://img.shields.io/badge/Paper-1.21.11-00A6FB?style=for-the-badge&logo=minecraft&logoColor=white" alt="Paper 1.21.11"/>
+</p>
 
-## Matriz de compatibilidad
-| Componente | Estado |
-|---|---|
-| Minecraft / Paper / Purpur | **1.21.11** |
-| Slimefun Core Drake | **11** (línea `1.21-latin`) |
-| Java | 21 |
+</div>
 
-## Instalación
-1. Compila o descarga el JAR de la rama `1.21-latin`.
-2. Respalda el JAR y `plugins/DynaTech/` antes de sustituirlo.
-3. Instala un único JAR en una ventana de reinicio controlada.
-4. Valida en staging una máquina colocada, una receta y su inventario antes de
-   continuar con producción.
+---
 
-## Build local
+## ⚡ Integración Nativa Rust (Opción A: Modelo Híbrido Cero-Riesgo)
+
+`DynaTech-drake` incluye el puente Panama FFM **`RustNativeBridge`** para delegar el cálculo de crecimiento de cultivos hidropónicos y procesamiento de minerales directamente al motor nativo `slimefun_ffi` en Rust.
+
+---
+
+## 🛠️ Compilación
+
 ```bash
-mvn -B -ntp clean verify
+mvn clean package
 ```
 
-Artefacto esperado:
-- `target/DynaTech-drake-*.jar`
+---
 
-## Flujo de release
-1. Crear branch de cambios (`feature/*` o `fix/*`).
-2. Abrir PR hacia `1.21-latin` con plan de pruebas.
-3. Al mergear, crear tag/release y publicar jar compilado.
+<div align="center">
 
-Versionar cambios de recetas/ítems y registrar compatibilidad con el core del
-mismo corte. El fork no usa autoactualizadores ni escribe artefactos en
-ejecución.
+**DrakesCraft Labs** · Mantenido por [**JackStar6677-1**](https://github.com/JackStar6677-1)
 
-## Relación con el monorepo
-Este repositorio es la fuente de desarrollo aislado por addon y despliegues
-independientes. Mantiene IDs, recetas y datos de bloque existentes para que una
-actualización no invalide progreso de jugadores.
+</div>
