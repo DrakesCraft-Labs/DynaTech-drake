@@ -1,6 +1,6 @@
 <div align="center">
 
-![DynaTech-Drake Banner](./dynatech_banner.svg)
+  <img src="https://raw.githubusercontent.com/DrakesCraft-Labs/DynaTech-drake/1.21-latin/dynatech_banner.svg" alt="DynaTech-drake Banner" width="920" />
 
 # ⚡ DynaTech-Drake
 
