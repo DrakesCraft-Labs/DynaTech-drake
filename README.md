@@ -63,6 +63,6 @@ Ubica el archivo compilado `DynaTech-drake-v1.5.0.jar` en la carpeta `plugins/` 
 
 <div align="center">
 
-**DrakesCraft Labs** · Mantenido por [**JackStar6677-1**](https://github.com/JackStar6677-1)
+**DrakesCraft Labs** · Maintained by [**JackStar6677-1**](https://github.com/JackStar6677-1)
 
 </div>
