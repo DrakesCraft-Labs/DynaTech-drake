@@ -134,9 +134,17 @@ public class PotionSprinkler extends AbstractElectricTicker {
             }
         }
 
-        enabledEntities.getOrDefault(b.getLocation(), new HashSet<>()).removeIf(uuid -> (Bukkit.getEntity(uuid) != null 
-                    && Bukkit.getEntity(uuid) instanceof LivingEntity livingEntity
-                    && livingEntity.getActivePotionEffects().isEmpty())); 
+        // Mismo fallo que tenia la Antigravity Bubble: getOrDefault devuelve un conjunto nuevo y
+        // desechable cuando la clave no esta --lo normal tras un reinicio, porque el mapa vive en
+        // memoria y los bloques siguen ticando--, asi que el removeIf no limpiaba nada y el
+        // registro crecia sin fin.
+        Set<UUID> registradas = enabledEntities.get(b.getLocation());
+        if (registradas != null) {
+            registradas.removeIf(uuid -> {
+                Entity entidad = Bukkit.getEntity(uuid);
+                return entidad instanceof LivingEntity viva && viva.getActivePotionEffects().isEmpty();
+            });
+        }
     }
 
     private void applyPotionEffect(PotionEffect pe, LivingEntity livingEntity) {

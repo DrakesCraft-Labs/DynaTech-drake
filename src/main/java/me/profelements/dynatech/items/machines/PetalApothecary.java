@@ -52,25 +52,17 @@ public class PetalApothecary extends SlimefunItem {
     private static BlockUseHandler onUse() {
         return new BlockUseHandler() {
 
+            /**
+             * El clic derecho ya no responde nada.
+             *
+             * Aqui habia trazas de desarrollo que se enviaban al jugador en cada clic: el nivel
+             * del caldero, el tamano interno del mapa de recetas y la lista de items, en ingles y
+             * sin formato. Quien usaba el Petal Apothecary recibia todo eso por chat y parecia que
+             * la maquina estaba rota.
+             */
             @Override
             public void onRightClick(PlayerRightClickEvent event) {
-
-                if (event.getClickedBlock().get().getBlockData() instanceof Levelled lvl) {
-                    event.getPlayer()
-                            .sendMessage(Component.text("Level of cauldron = ").append(Component.text(lvl.getLevel())));
-
-                    List<ItemStack> items = RECIPE_ITEMS
-                            .getOrDefault(new BlockPosition(event.getClickedBlock().get()), new ArrayList<>());
-
-                    event.getPlayer()
-                            .sendMessage(Component.text("entries size: ").append(Component.text(RECIPE_ITEMS.size())));
-
-                    for (ItemStack item : items) {
-                        event.getPlayer().sendMessage(Component
-                                .text(PlainTextComponentSerializer.plainText().serialize(item.displayName())));
-                    }
-                }
-
+                // Sin cuerpo a proposito: la maquina trabaja en su tick, no al hacer clic.
             }
         };
 
