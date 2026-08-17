@@ -10,3 +10,6 @@ dependency-reduced-pom.xml
 /.vscode
 Notes.txt
 .factorypath
+
+build/
+.gradle/
