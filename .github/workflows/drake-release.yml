@@ -21,7 +21,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
 
       - name: Build with Maven
         if: ${{ hashFiles('pom.xml') != '' }}
