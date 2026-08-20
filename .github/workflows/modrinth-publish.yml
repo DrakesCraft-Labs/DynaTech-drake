@@ -119,6 +119,12 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Clonar dependencias DrakesCraft Maven Repo
+        run: |
+          mkdir -p ~/.m2/repository/com/github/drakescraft_labs
+          git clone --depth 1 https://github.com/DrakesCraft-Labs/maven-repo.git /tmp/drakes-maven-repo
+          cp -rn /tmp/drakes-maven-repo/com/github/drakescraft_labs/* ~/.m2/repository/com/github/drakescraft_labs/ || true
+
       - name: Compilar
         run: |
           if [ -f pom.xml ]; then
