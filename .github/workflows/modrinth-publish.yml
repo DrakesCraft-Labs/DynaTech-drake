@@ -121,9 +121,9 @@ jobs:
 
       - name: Clonar dependencias DrakesCraft Maven Repo
         run: |
-          mkdir -p ~/.m2/repository/com/github/drakescraft_labs
+          mkdir -p ~/.m2/repository
           git clone --depth 1 https://github.com/DrakesCraft-Labs/maven-repo.git /tmp/drakes-maven-repo
-          cp -rn /tmp/drakes-maven-repo/com/github/drakescraft_labs/* ~/.m2/repository/com/github/drakescraft_labs/ || true
+          cp -rn /tmp/drakes-maven-repo/com ~/.m2/repository/ || true
 
       - name: Compilar
         run: |
