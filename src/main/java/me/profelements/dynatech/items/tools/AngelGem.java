@@ -6,44 +6,151 @@ import com.github.drakescraft_labs.slimefun4.api.items.SlimefunItem;
 import com.github.drakescraft_labs.slimefun4.api.items.SlimefunItemStack;
 import com.github.drakescraft_labs.slimefun4.api.recipes.RecipeType;
 import com.github.drakescraft_labs.slimefun4.core.attributes.NotPlaceable;
+import com.github.drakescraft_labs.slimefun4.core.attributes.Rechargeable;
 import com.github.drakescraft_labs.slimefun4.core.handlers.ItemDropHandler;
 import com.github.drakescraft_labs.slimefun4.core.handlers.ItemUseHandler;
 import com.github.drakescraft_labs.slimefun4.utils.SlimefunUtils;
 import me.profelements.dynatech.DynaTech;
 import me.profelements.dynatech.registries.Items;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Sound;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import com.google.common.base.Preconditions;
 
-public class AngelGem extends SlimefunItem implements NotPlaceable, Listener {
+public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable, Listener {
 
-    private final ItemSetting<Double> maxFlightSpeed = new ItemSetting<>(this, "max-flight-speed", 1.0d);
-    private final ItemSetting<Boolean> hasMaxFlightSpeed = new ItemSetting<>(this, "has-max-flight-speed", false);
+    private final ItemSetting<Double> maxFlightSpeed = new ItemSetting<>(this, "max-flight-speed", 0.15d);
+    private final ItemSetting<Boolean> hasMaxFlightSpeed = new ItemSetting<>(this, "has-max-flight-speed", true);
+
+    // Double y no Float a proposito: SnakeYAML lee todo decimal de Items.yml como Double, asi que
+    // un ItemSetting<Float> nunca valida y Slimefun cae siempre al valor por defecto avisando
+    // "Expected Float but found Double" en cada arranque. Con Double la clave si es configurable.
+    private final ItemSetting<Double> energyCapacity = new ItemSetting<>(this, "energy-capacity", 1024.0d);
+    private final ItemSetting<Double> energyDrainRate = new ItemSetting<>(this, "energy-drain-per-second", 16.0d);
+
+    private final Set<UUID> enabledFlightUsers = Collections.synchronizedSet(new HashSet<>());
 
     private float flySpeed = 0.1f;
 
     public AngelGem(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe);
 
-        addItemSetting(maxFlightSpeed, hasMaxFlightSpeed);
+        addItemSetting(maxFlightSpeed, hasMaxFlightSpeed, energyCapacity, energyDrainRate);
 
         addItemHandler(onRightClick(), onItemDrop());
 
         Bukkit.getPluginManager().registerEvents(this, DynaTech.getInstance());
+
+        startEnergyDrainTask();
+    }
+
+    @Override
+    public float getMaxItemCharge(ItemStack item) {
+        return energyCapacity.getValue().floatValue();
+    }
+
+    public float getEnergyConsumption() {
+        return energyDrainRate.getValue().floatValue();
+    }
+
+    private void startEnergyDrainTask() {
+        Bukkit.getScheduler().runTaskTimer(DynaTech.getInstance(), () -> {
+            if (enabledFlightUsers.isEmpty()) {
+                return;
+            }
+
+            synchronized (enabledFlightUsers) {
+                Iterator<UUID> it = enabledFlightUsers.iterator();
+                while (it.hasNext()) {
+                    UUID uuid = it.next();
+                    Player p = Bukkit.getPlayer(uuid);
+
+                    if (p == null || !p.isOnline()) {
+                        it.remove();
+                        continue;
+                    }
+
+                    if (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR
+                            || !p.isFlying()) {
+                        continue;
+                    }
+
+                    ItemStack gem = findAngelGem(p);
+                    if (gem == null) {
+                        it.remove();
+                        p.setFlying(false);
+                        if (!hasPermanentFlightPermission(p)) {
+                            p.setAllowFlight(false);
+                        }
+                        p.sendMessage(ChatColor.RED + "⚡ ¡La Gema Angelical no está en tu inventario! Vuelo suspendido.");
+                        p.playSound(p.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.0f);
+                        continue;
+                    }
+
+                    float cost = getEnergyConsumption();
+                    if (removeItemCharge(gem, cost)) {
+                        float remaining = getItemCharge(gem);
+                        if (remaining <= cost * 3.0f) {
+                            p.sendActionBar(Component.text("⚡ BATERÍA CRÍTICA: " + (int) remaining + " J restantes",
+                                    NamedTextColor.RED));
+                        }
+                        continue;
+                    }
+
+                    it.remove();
+                    p.setFlying(false);
+                    if (!hasPermanentFlightPermission(p)) {
+                        p.setAllowFlight(false);
+                    }
+                    p.setFallDistance(0.0f);
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 160, 0));
+                    p.sendMessage(ChatColor.RED + "⚡ ¡La Gema Angelical se ha quedado sin energía! Vuelo desactivado (Caída Lenta activa por 8s).");
+                    p.playSound(p.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 0.8f);
+                }
+            }
+        }, 20L, 20L);
+    }
+
+    private boolean hasPermanentFlightPermission(Player p) {
+        return p.hasPermission("cmi.command.fly")
+                || p.hasPermission("essentials.fly")
+                || p.hasPermission("drakescraft.vip.fly");
+    }
+
+    private ItemStack findAngelGem(Player p) {
+        for (ItemStack item : p.getInventory().getContents()) {
+            if (item != null && item.getType() == Items.ANGEL_GEM.stack().getType()
+                    && SlimefunUtils.isItemSimilar(item, Items.ANGEL_GEM.stack(), false, false)) {
+                return item;
+            }
+        }
+
+        return null;
     }
 
     private ItemDropHandler onItemDrop() {
@@ -51,49 +158,76 @@ public class AngelGem extends SlimefunItem implements NotPlaceable, Listener {
             ItemStack item = itemEntity.getItemStack();
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE && item.getType() == Items.ANGEL_GEM.stack().getType()
                     && SlimefunUtils.isItemSimilar(item, Items.ANGEL_GEM.stack(), false, false)) {
+                enabledFlightUsers.remove(e.getPlayer().getUniqueId());
                 e.getPlayer().setFlying(false);
-                e.getPlayer().setAllowFlight(false);
-                e.getPlayer().setFlySpeed(0.1f);
-                e.getPlayer().setFallDistance(0.0f);
+                if (!hasPermanentFlightPermission(e.getPlayer())) {
+                    e.getPlayer().setAllowFlight(false);
+                }
             } else {
                 return false;
             }
+            e.getPlayer().setFlySpeed(0.1f);
+            e.getPlayer().setFallDistance(0.0f);
             return true;
         };
     }
 
     private ItemUseHandler onRightClick() {
         return e -> {
-            if (e.getPlayer().isSneaking()) {
-                e.getPlayer().setFlying(false);
-                e.getPlayer().setAllowFlight(false);
-                e.getPlayer().setFallDistance(0f);
-                e.getItem().setItemMeta(updateLore(e.getItem(), e.getPlayer()));
+            Player p = e.getPlayer();
+
+            if (p.isSneaking()) {
+                enabledFlightUsers.remove(p.getUniqueId());
+                p.setFlying(false);
+                if (!hasPermanentFlightPermission(p)) {
+                    p.setAllowFlight(false);
+                }
+                p.setFallDistance(0.0f);
+                p.sendMessage(ChatColor.YELLOW + "⚡ Vuelo desactivado.");
+                e.getItem().setItemMeta(updateLore(e.getItem(), p));
+                e.cancel();
+                return;
             }
-            if (!e.getPlayer().getAllowFlight()) {
-                e.getPlayer().setAllowFlight(true);
+
+            if (!enabledFlightUsers.contains(p.getUniqueId()) && !p.getAllowFlight()) {
+                float charge = getItemCharge(e.getItem());
+                if (charge < getEnergyConsumption()) {
+                    p.sendMessage(ChatColor.RED + "⚡ ¡La Gema Angelical no tiene suficiente energía! Cárgala en un Banco de Carga de Slimefun.");
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
+                    e.cancel();
+                    return;
+                }
+
+                enabledFlightUsers.add(p.getUniqueId());
+                p.setAllowFlight(true);
                 setFlySpeed(0.10f);
+                p.setFlySpeed(getFlySpeed());
+                p.sendMessage(ChatColor.GREEN + "⚡ Vuelo angelical activado. (" + (int) charge
+                        + " J disponibles - Consumo: " + (int) getEnergyConsumption() + " J/s)");
+                p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.2f);
             } else {
                 if (hasMaxFlightSpeed.getValue()) {
                     if (getFlySpeed() < maxFlightSpeed.getValue()) {
-                        if (getFlySpeed() + 0.10f > maxFlightSpeed.getValue()) {
+                        if (getFlySpeed() + 0.05f > maxFlightSpeed.getValue()) {
                             setFlySpeed(maxFlightSpeed.getValue().floatValue());
                         } else {
-                            setFlySpeed(getFlySpeed() + 0.10f);
+                            setFlySpeed(getFlySpeed() + 0.05f);
                         }
                     } else {
                         setFlySpeed(0.10f);
                     }
                 } else {
-                    if (getFlySpeed() < 1f) {
-                        setFlySpeed(getFlySpeed() + 0.10f);
+                    if (getFlySpeed() < 0.25f) {
+                        setFlySpeed(getFlySpeed() + 0.05f);
                     } else {
                         setFlySpeed(0.10f);
                     }
                 }
+                p.sendMessage(ChatColor.AQUA + "⚡ Velocidad de vuelo ajustada a: " + getFlySpeed());
             }
-            e.getPlayer().setFlySpeed(getFlySpeed());
-            e.getItem().setItemMeta(updateLore(e.getItem(), e.getPlayer()));
+
+            p.setFlySpeed(getFlySpeed());
+            e.getItem().setItemMeta(updateLore(e.getItem(), p));
             e.cancel();
         };
     }
@@ -104,29 +238,44 @@ public class AngelGem extends SlimefunItem implements NotPlaceable, Listener {
         if (isItem(e.getCursor()) || isItem(e.getCurrentItem())) {
             for (HumanEntity he : views) {
                 if (he instanceof Player p) {
+                    if (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR) {
+                        continue;
+                    }
+                    enabledFlightUsers.remove(p.getUniqueId());
                     p.setFlying(false);
-                    p.setAllowFlight(false);
+                    if (!hasPermanentFlightPermission(p)) {
+                        p.setAllowFlight(false);
+                    }
                     p.setFallDistance(0f);
                 }
             }
         }
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        enabledFlightUsers.remove(e.getPlayer().getUniqueId());
+    }
+
     protected ItemMeta updateLore(ItemStack item, Player p) {
         ItemMeta im = item.getItemMeta();
 
-        if (!im.hasLore()) {
-            throw new IllegalArgumentException("This item does not have any lore!");
+        if (im == null || !im.hasLore()) {
+            return im;
         }
 
         List<String> lore = im.getLore();
+        boolean active = p != null && p.getAllowFlight();
 
         for (int line = 0; line < lore.size(); line++) {
-            if (lore.get(line).contains("Flight: <enabled>")) {
-                lore.set(line, lore.get(line).replace("<enabled>", p.getAllowFlight() ? "Enabled" : "Disabled"));
+            String str = lore.get(line);
+            if (str.contains("Flight: ") || str.contains("Vuelo: ")) {
+                lore.set(line, ChatColor.GRAY + (str.contains("Vuelo") ? "Vuelo: " : "Flight: ")
+                        + (active ? ChatColor.GREEN + "Activado" : ChatColor.RED + "Desactivado"));
             }
-            if (lore.get(line).contains(ChatColor.GRAY + "Flight Speed: ")) {
-                lore.set(line, lore.get(line).replaceFirst(".*", ChatColor.GRAY + "Flight Speed: " + getFlySpeed()));
+            if (str.contains("Flight Speed: ") || str.contains("Velocidad: ")) {
+                lore.set(line, ChatColor.GRAY + (str.contains("Velocidad") ? "Velocidad: " : "Flight Speed: ")
+                        + ChatColor.YELLOW + getFlySpeed());
             }
         }
 
@@ -142,7 +291,7 @@ public class AngelGem extends SlimefunItem implements NotPlaceable, Listener {
         Preconditions.checkArgument(newFlySpeed > 0, "Must be greater then 0");
 
         BigDecimal bd = new BigDecimal(Float.toString(newFlySpeed));
-        bd = bd.setScale(1, RoundingMode.DOWN);
+        bd = bd.setScale(2, RoundingMode.DOWN);
         flySpeed = bd.floatValue();
     }
 
