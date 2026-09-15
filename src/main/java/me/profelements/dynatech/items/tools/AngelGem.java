@@ -50,7 +50,7 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
     // Double y no Float a proposito: SnakeYAML lee todo decimal de Items.yml como Double, asi que
     // un ItemSetting<Float> nunca valida y Slimefun cae siempre al valor por defecto avisando
     // "Expected Float but found Double" en cada arranque. Con Double la clave si es configurable.
-    private final ItemSetting<Double> energyCapacity = new ItemSetting<>(this, "energy-capacity", 1024.0d);
+    private final ItemSetting<Double> energyCapacity = new ItemSetting<>(this, "energy-capacity", 10240.0d);
     private final ItemSetting<Double> energyDrainRate = new ItemSetting<>(this, "energy-drain-per-second", 16.0d);
 
     private final Set<UUID> enabledFlightUsers = Collections.synchronizedSet(new HashSet<>());
@@ -277,10 +277,29 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
                 lore.set(line, ChatColor.GRAY + (str.contains("Velocidad") ? "Velocidad: " : "Flight Speed: ")
                         + ChatColor.YELLOW + getFlySpeed());
             }
+            // Consumo y capacidad salen de Items.yml (ticket 471), no del texto fijo.
+            if (str.contains("Consumo: ")) {
+                lore.set(line, consumoLore());
+            }
+            if (str.contains("Capacidad: ")) {
+                lore.set(line, capacidadLore());
+            }
         }
 
         im.setLore(lore);
         return im;
+    }
+
+    public String consumoLore() {
+        int drain = Math.max(1, (int) getEnergyConsumption());
+        int seconds = (int) (energyCapacity.getValue() / drain);
+        String dur = seconds >= 120 ? "~" + (seconds / 60) + " min por carga" : "~" + seconds + "s por carga";
+        return ChatColor.GRAY + "Consumo: " + ChatColor.RED + drain + " J/s " + ChatColor.DARK_GRAY + "("
+                + ChatColor.GRAY + dur + ChatColor.DARK_GRAY + ")";
+    }
+
+    public String capacidadLore() {
+        return ChatColor.GRAY + "Capacidad: " + ChatColor.YELLOW + (int) energyCapacity.getValue().doubleValue() + " J";
     }
 
     public float getFlySpeed() {

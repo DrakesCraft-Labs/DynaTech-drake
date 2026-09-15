@@ -307,8 +307,8 @@ public class Items {
                     "&eConsume energía mientras vuelas.",
                     "&7Recárgala en un Banco de Carga.",
                     "",
-                    "&7Consumo: &c16 J/s &8(&7~64s por carga&8)",
-                    "&7Capacidad: &e1024 J",
+                    "&7Consumo: &c16 J/s &8(&7~10 min por carga&8)",
+                    "&7Capacidad: &e10240 J",
                     "",
                     "&7Flight: <enabled>",
                     "&7Flight Speed: <speed>"));
