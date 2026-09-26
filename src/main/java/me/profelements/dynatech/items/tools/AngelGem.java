@@ -24,6 +24,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -37,8 +38,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Preconditions;
 
@@ -53,7 +56,8 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
     private final ItemSetting<Double> energyCapacity = new ItemSetting<>(this, "energy-capacity", 10240.0d);
     private final ItemSetting<Double> energyDrainRate = new ItemSetting<>(this, "energy-drain-per-second", 16.0d);
 
-    private final Set<UUID> enabledFlightUsers = Collections.synchronizedSet(new HashSet<>());
+    public static final Set<UUID> enabledFlightUsers = Collections.synchronizedSet(new HashSet<>());
+    public static final Map<UUID, Long> fallImmunity = new ConcurrentHashMap<>();
 
     private float flySpeed = 0.1f;
 
@@ -107,6 +111,9 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
                         if (!hasPermanentFlightPermission(p)) {
                             p.setAllowFlight(false);
                         }
+                        p.setFallDistance(0.0f);
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 160, 0));
+                        fallImmunity.put(uuid, System.currentTimeMillis() + 10000L);
                         p.sendMessage(ChatColor.RED + "⚡ ¡La Gema Angelical no está en tu inventario! Vuelo suspendido.");
                         p.playSound(p.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.0f);
                         continue;
@@ -129,6 +136,7 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
                     }
                     p.setFallDistance(0.0f);
                     p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 160, 0));
+                    fallImmunity.put(uuid, System.currentTimeMillis() + 10000L);
                     p.sendMessage(ChatColor.RED + "⚡ ¡La Gema Angelical se ha quedado sin energía! Vuelo desactivado (Caída Lenta activa por 8s).");
                     p.playSound(p.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 0.8f);
                 }
@@ -163,11 +171,13 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
                 if (!hasPermanentFlightPermission(e.getPlayer())) {
                     e.getPlayer().setAllowFlight(false);
                 }
+                e.getPlayer().setFallDistance(0.0f);
+                e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 160, 0));
+                fallImmunity.put(e.getPlayer().getUniqueId(), System.currentTimeMillis() + 10000L);
             } else {
                 return false;
             }
             e.getPlayer().setFlySpeed(0.1f);
-            e.getPlayer().setFallDistance(0.0f);
             return true;
         };
     }
@@ -183,7 +193,9 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
                     p.setAllowFlight(false);
                 }
                 p.setFallDistance(0.0f);
-                p.sendMessage(ChatColor.YELLOW + "⚡ Vuelo desactivado.");
+                p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 160, 0));
+                fallImmunity.put(p.getUniqueId(), System.currentTimeMillis() + 10000L);
+                p.sendMessage(ChatColor.YELLOW + "⚡ Vuelo desactivado (Caída segura activa por 8s).");
                 e.getItem().setItemMeta(updateLore(e.getItem(), p));
                 e.cancel();
                 return;
@@ -246,7 +258,9 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
                     if (!hasPermanentFlightPermission(p)) {
                         p.setAllowFlight(false);
                     }
-                    p.setFallDistance(0f);
+                    p.setFallDistance(0.0f);
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 160, 0));
+                    fallImmunity.put(p.getUniqueId(), System.currentTimeMillis() + 10000L);
                 }
             }
         }
@@ -255,6 +269,31 @@ public class AngelGem extends SlimefunItem implements Rechargeable, NotPlaceable
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
         enabledFlightUsers.remove(e.getPlayer().getUniqueId());
+        fallImmunity.remove(e.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onFallDamage(EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player p && e.getCause() == EntityDamageEvent.DamageCause.FALL) {
+            UUID uuid = p.getUniqueId();
+            if (enabledFlightUsers.contains(uuid) || fallImmunity.getOrDefault(uuid, 0L) > System.currentTimeMillis()) {
+                e.setCancelled(true);
+                p.setFallDistance(0.0f);
+                return;
+            }
+
+            ItemStack gem = findAngelGem(p);
+            if (gem != null) {
+                float charge = getItemCharge(gem);
+                if (charge >= 50.0f) {
+                    removeItemCharge(gem, 50.0f);
+                    e.setCancelled(true);
+                    p.setFallDistance(0.0f);
+                    p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.5f);
+                    p.sendActionBar(Component.text("⚡ Gema Angelical absorbió el daño de caída (-50 J)", NamedTextColor.AQUA));
+                }
+            }
+        }
     }
 
     protected ItemMeta updateLore(ItemStack item, Player p) {
